@@ -9,15 +9,8 @@ import vn.hoidanit.jobhunter.domain.RestResponse;
 public class HelloWorldController {
 
     @GetMapping("/")
-    public ResponseEntity<RestResponse<String>> getHelloWorld() {
-        // Tạo đối tượng RestResponse
-        RestResponse<String> response = new RestResponse<>();
-        response.setStatusCode(200);
-        response.setError(null);  // Không có lỗi
-        response.setMessage("Hello World ");  // Đây là message dạng String
-        response.setData(null);  // Không có dữ liệu thêm
+    public String getHelloWorld() {
 
-        // Trả về RestResponse dưới dạng JSON với mã HTTP 200
-        return ResponseEntity.ok(response);
+        return "Hello World";
     }
 }
