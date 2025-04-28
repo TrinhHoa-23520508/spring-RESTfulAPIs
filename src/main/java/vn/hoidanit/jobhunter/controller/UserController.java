@@ -1,18 +1,16 @@
 package vn.hoidanit.jobhunter.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import vn.hoidanit.jobhunter.domain.User;
+import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
 
@@ -52,10 +50,21 @@ public class UserController {
 
     // fetch all users
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUser() {
-        // return ResponseEntity.ok(this.userService.fetchAllUser());
-        return ResponseEntity.status(HttpStatus.OK).body(this.userService.fetchAllUser());
+    public ResponseEntity<ResultPaginationDTO> getAllUser(
+            @RequestParam(value = "current", defaultValue = "1") int current,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
+    ) {
+        // Validate page and size
+        int validCurrent = Math.max(current - 1, 0); // frontend gửi 1 --> backend thành 0
+        int validPageSize = Math.min(Math.max(pageSize, 1), 100); // Tối đa 100 bản ghi 1 trang
+
+        Pageable pageable = PageRequest.of(validCurrent, validPageSize);
+
+        ResultPaginationDTO users = this.userService.fetchAllUser(pageable);
+
+        return ResponseEntity.status(HttpStatus.OK).body(users);
     }
+
 
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User user) {
