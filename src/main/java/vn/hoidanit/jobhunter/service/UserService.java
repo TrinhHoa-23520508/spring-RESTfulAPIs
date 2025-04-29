@@ -6,28 +6,41 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.hoidanit.jobhunter.domain.User;
-import vn.hoidanit.jobhunter.domain.dto.Meta;
-import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.hoidanit.jobhunter.domain.dto.*;
+import vn.hoidanit.jobhunter.domain.mapper.UserMapper;
 import vn.hoidanit.jobhunter.repository.UserRepository;
+import vn.hoidanit.jobhunter.util.error.DuplicateResourceException;
+import vn.hoidanit.jobhunter.util.error.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
-    public User handleCreateUser(User user) {
-        // encode
+    public UserCreateDto handleCreateUser(User user) {
+
+        if (this.userRepository.existsByEmail(user.getEmail())) {
+            throw new DuplicateResourceException("Email "+user.getEmail()+" đã tồn tại!");
+        }
+
         user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-        return this.userRepository.save(user);
+
+        User savedUser = this.userRepository.save(user);
+        return this.userMapper.toUserCreateDto(savedUser);
     }
+
 
     public void handleDeleteUser(long id) {
         this.userRepository.deleteById(id);
@@ -38,39 +51,58 @@ public class UserService {
         if (userOptional.isPresent()) {
             return userOptional.get();
         }
+
         return null;
     }
 
-    public ResultPaginationDTO<List<User>> fetchAllUser(Specification<User> spec, Pageable pageable) {
+    public ResultPaginationDTO<List<UserResponseDto>> fetchAllUser(Specification<User> spec, Pageable pageable) {
         Page<User> users = this.userRepository.findAll(spec, pageable);
-        ResultPaginationDTO<List<User>> paginationDTO = new ResultPaginationDTO<>();
+
+        ResultPaginationDTO<List<UserResponseDto>> paginationDTO = new ResultPaginationDTO<>();
         Meta meta = new Meta();
 
-        meta.setPage(pageable.getPageNumber()+1);
-        meta.setTotal(pageable.getPageSize());
+        meta.setPage(pageable.getPageNumber() + 1);
+        meta.setTotal((int) users.getTotalElements());
         meta.setPages(users.getTotalPages());
         meta.setPageSize(users.getSize());
 
         paginationDTO.setMeta(meta);
-        paginationDTO.setResult(users.getContent());
+        paginationDTO.setResult(
+                users.getContent()
+                        .stream()
+                        .map(u -> this.userMapper.toUserResponseDto(u))
+                        .collect(Collectors.toList())
+        );
 
         return paginationDTO;
-
     }
 
-    public User handleUpdateUser(User reqUser) {
+
+    public UserUpdateDto handleUpdateUser(User reqUser) {
         User currentUser = this.fetchUserById(reqUser.getId());
         if (currentUser != null) {
-            currentUser.setEmail(reqUser.getEmail());
             currentUser.setName(reqUser.getName());
-            currentUser.setPassword(this.passwordEncoder.encode(reqUser.getPassword()));
+            currentUser.setGender(reqUser.getGender());
+            currentUser.setAge(reqUser.getAge());
+            currentUser.setAddress(reqUser.getAddress());
             // update
             currentUser = this.userRepository.save(currentUser);
         }
-        return currentUser;
+        else {
+            throw new NotFoundException("User not found!");
+        }
+        return this.userMapper.toUserUpdateDto(currentUser);
     }
     public User handleGetUserByUserName(String username){
         return this.userRepository.findByEmail(username);
+    }
+
+    public UserResponseDto handleGetUserById(Long id) {
+        User user = this.fetchUserById(id);
+        if(user == null){
+            throw new NotFoundException("User has id = "+id+" not found!");
+        }
+        return this.userMapper.toUserResponseDto(user);
     }
 
 }

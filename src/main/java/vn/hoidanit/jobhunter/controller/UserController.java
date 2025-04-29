@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
+import vn.hoidanit.jobhunter.domain.dto.UserCreateDto;
+import vn.hoidanit.jobhunter.domain.dto.UserResponseDto;
+import vn.hoidanit.jobhunter.domain.dto.UserUpdateDto;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
@@ -26,49 +29,51 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> createNewUser(@RequestBody User postManUser) {
-        User ericUser = this.userService.handleCreateUser(postManUser);
+    @ApiMessage("Create a new user")
+    public ResponseEntity<UserCreateDto> createNewUser(@RequestBody User postManUser) {
+        UserCreateDto ericUser = this.userService.handleCreateUser(postManUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(ericUser);
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") long id)
+    @ApiMessage("Delete a user")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id)
             throws IdInvalidException {
         if (id >= 1500) {
-            throw new IdInvalidException("Id khong lon hon 1501");
+            throw new IdInvalidException("Id khong lon hon 1500");
         }
 
         this.userService.handleDeleteUser(id);
-        return ResponseEntity.ok("ericUser");
-        // return ResponseEntity.status(HttpStatus.OK).body("ericUser");
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     // fetch user by id
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") long id) {
-        User fetchUser = this.userService.fetchUserById(id);
-        // return ResponseEntity.ok(fetchUser);
+    @ApiMessage("Fetch user by id")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable("id") long id) {
+        UserResponseDto fetchUser = this.userService.handleGetUserById(id);
         return ResponseEntity.status(HttpStatus.OK).body(fetchUser);
     }
 
     // fetch all users
     @GetMapping("/users")
     @ApiMessage("fetch users")
-    public ResponseEntity<ResultPaginationDTO<List<User>>> getAllUser(
+    public ResponseEntity<ResultPaginationDTO<List<UserResponseDto>>> getAllUser(
             @Filter Specification<User> spec,
             Pageable pageable
             ) {
 
-        ResultPaginationDTO<List<User>> users = this.userService.fetchAllUser(spec, pageable);
+        ResultPaginationDTO<List<UserResponseDto>> users = this.userService.fetchAllUser(spec, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 
 
     @PutMapping("/users")
-    public ResponseEntity<User> updateUser(@RequestBody User user) {
-        User ericUser = this.userService.handleUpdateUser(user);
-        return ResponseEntity.ok(ericUser);
+    @ApiMessage("Update a user")
+    public ResponseEntity<UserUpdateDto> updateUser(@RequestBody User user) {
+        UserUpdateDto updateUser = this.userService.handleUpdateUser(user);
+        return ResponseEntity.status(HttpStatus.OK).body(updateUser);
     }
 
 }

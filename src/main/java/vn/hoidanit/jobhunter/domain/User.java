@@ -1,6 +1,10 @@
 package vn.hoidanit.jobhunter.domain;
 
 import jakarta.persistence.*;
+import vn.hoidanit.jobhunter.util.SecurityUtil;
+import vn.hoidanit.jobhunter.util.constant.GenderEnum;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +16,82 @@ public class User {
     private String name;
     private String email;
     private String password;
+    private int age;
+    private String address;
+
+    @Enumerated(EnumType.STRING)
+    private GenderEnum gender;
+    private String refreshToken;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private String createdBy;
+    private String updatedBy;
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public GenderEnum getGender() {
+        return gender;
+    }
+
+    public void setGender(GenderEnum gender) {
+        this.gender = gender;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+
 
     public Long getId() {
         return id;
@@ -43,6 +123,18 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @PrePersist
+    public void preCreateUser(){
+        this.createdAt = Instant.now();
+        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()?SecurityUtil.getCurrentUserLogin().get():"";
+    }
+
+    @PreUpdate
+    public void preUpdateUser(){
+        this.updatedAt = Instant.now();
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()?SecurityUtil.getCurrentUserLogin().get():"";
     }
 
 
