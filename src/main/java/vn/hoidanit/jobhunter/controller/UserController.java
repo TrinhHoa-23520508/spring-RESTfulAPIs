@@ -1,10 +1,11 @@
 package vn.hoidanit.jobhunter.controller;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.data.domain.PageRequest;
+
+import com.turkraft.springfilter.boot.Filter;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.hoidanit.jobhunter.service.UserService;
+import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
 
 @RestController
+@RequestMapping("/api/v1")
 public class UserController {
     private final UserService userService;
 
@@ -50,17 +53,13 @@ public class UserController {
 
     // fetch all users
     @GetMapping("/users")
-    public ResponseEntity<ResultPaginationDTO> getAllUser(
-            @RequestParam(value = "current", defaultValue = "1") int current,
-            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
-    ) {
-        // Validate page and size
-        int validCurrent = Math.max(current - 1, 0); // frontend gửi 1 --> backend thành 0
-        int validPageSize = Math.min(Math.max(pageSize, 1), 100); // Tối đa 100 bản ghi 1 trang
+    @ApiMessage("fetch users")
+    public ResponseEntity<ResultPaginationDTO<List<User>>> getAllUser(
+            @Filter Specification<User> spec,
+            Pageable pageable
+            ) {
 
-        Pageable pageable = PageRequest.of(validCurrent, validPageSize);
-
-        ResultPaginationDTO users = this.userService.fetchAllUser(pageable);
+        ResultPaginationDTO<List<User>> users = this.userService.fetchAllUser(spec, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(users);
     }

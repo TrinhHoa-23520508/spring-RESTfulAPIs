@@ -1,7 +1,12 @@
 package vn.hoidanit.jobhunter.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import vn.hoidanit.jobhunter.domain.Company;
+import vn.hoidanit.jobhunter.domain.dto.Meta;
+import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.hoidanit.jobhunter.repository.CompanyRepository;
 import vn.hoidanit.jobhunter.util.error.NotFoundException;
 import java.util.List;
@@ -19,8 +24,19 @@ public class CompanyService {
         return companyRepository.save(company);
     }
 
-    public List<Company> getAllCompanies() {
-        return companyRepository.findAll();
+    public ResultPaginationDTO<List<Company>> getAllCompanies(Specification<Company> spec, Pageable pageable) {
+        Page<Company> companies = this.companyRepository.findAll(spec, pageable);
+        ResultPaginationDTO<List<Company>> paginationDTO = new ResultPaginationDTO<List<Company>>();
+        Meta meta = new Meta();
+
+        meta.setPage(pageable.getPageNumber()+1);
+        meta.setTotal(pageable.getPageSize());
+        meta.setPages(companies.getTotalPages());
+        meta.setPageSize(companies.getSize());
+
+        paginationDTO.setMeta(meta);
+        paginationDTO.setResult(companies.getContent());
+        return paginationDTO;
     }
 
     public Company getCompanyById(Long id) {
