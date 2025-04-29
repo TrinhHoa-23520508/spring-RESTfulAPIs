@@ -1,9 +1,12 @@
 package vn.hoidanit.jobhunter.domain.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import vn.hoidanit.jobhunter.util.constant.GenderEnum;
 
 import java.time.Instant;
-
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserResponseDto {
     private Long id;
     private String email;

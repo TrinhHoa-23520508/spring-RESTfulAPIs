@@ -10,20 +10,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.LoginDTO;
 import vn.hoidanit.jobhunter.domain.dto.ResLoginDTO;
+import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
 
 @RestController
+@RequestMapping("/api/v1")
 public class AuthController {
     private final SecurityUtil securityUtil;
     private final AuthenticationManagerBuilder authenticationManagerBuidler;
-    public AuthController(AuthenticationManagerBuilder authenticationManagerBuidler, SecurityUtil securityUtil) {
+    private final UserService userService;
+
+    public AuthController(AuthenticationManagerBuilder authenticationManagerBuidler
+            , SecurityUtil securityUtil
+            , UserService userService) {
         this.authenticationManagerBuidler = authenticationManagerBuidler;
         this.securityUtil = securityUtil;
+        this.userService = userService;
     }
     @PostMapping("/login")
-    @RequestMapping("/api/v1")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 loginDTO.getUsername(),
@@ -36,6 +43,15 @@ public class AuthController {
         String accessToken = this.securityUtil.createToken(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         ResLoginDTO resLoginDTO = new ResLoginDTO();
+
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
+        User currentUserLogin = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+        if(currentUserLogin != null) {
+            userLogin.setId(currentUserLogin.getId());
+            userLogin.setUserName(currentUserLogin.getName());
+            userLogin.setEmail(currentUserLogin.getEmail());
+            resLoginDTO.setUserLogin(userLogin);
+        }
         resLoginDTO.setAccessToken(accessToken);
         return ResponseEntity.ok().body(resLoginDTO);
     }

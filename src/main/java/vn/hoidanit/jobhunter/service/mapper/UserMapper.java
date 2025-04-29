@@ -1,4 +1,4 @@
-package vn.hoidanit.jobhunter.domain.mapper;
+package vn.hoidanit.jobhunter.service.mapper;
 
 import org.springframework.stereotype.Component;
 import vn.hoidanit.jobhunter.domain.User;

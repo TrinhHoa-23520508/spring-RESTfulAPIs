@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.*;
-import vn.hoidanit.jobhunter.domain.mapper.UserMapper;
+import vn.hoidanit.jobhunter.service.mapper.UserMapper;
 import vn.hoidanit.jobhunter.repository.UserRepository;
 import vn.hoidanit.jobhunter.util.error.DuplicateResourceException;
 import vn.hoidanit.jobhunter.util.error.NotFoundException;
