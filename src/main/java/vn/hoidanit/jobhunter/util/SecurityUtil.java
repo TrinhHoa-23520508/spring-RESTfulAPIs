@@ -1,5 +1,7 @@
 package vn.hoidanit.jobhunter.util;
 
+import com.nimbusds.jose.util.Base64;
+import com.nimbusds.jwt.JWT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,6 +13,8 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 import vn.hoidanit.jobhunter.domain.dto.ResLoginDTO;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -37,8 +41,26 @@ public class SecurityUtil {
     @Value("${hoidanit.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, SecurityUtil.JWT_ALGORITHM.getName());
+    }
 
-    public String createAccessToken(Authentication authentication, ResLoginDTO.UserLogin userLogin) {
+    public Jwt checkValidRefreshToken(String refreshToken){
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
+        try {
+            Jwt decodeToken = jwtDecoder.decode(refreshToken);
+            System.out.println(">>> JWT message ok");
+            return decodeToken;
+        } catch (Exception e) {
+            System.out.println(">>> JWT error" + e.getMessage());
+            throw e;
+        }
+
+    }
+
+
+    public String createAccessToken(String email, ResLoginDTO.UserLogin userLogin) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
@@ -49,7 +71,7 @@ public class SecurityUtil {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(authentication.getName())
+                .subject(email)
                 .claim("user", userLogin)
                 .claim("permission", listAuthority)
                 .build();
@@ -76,6 +98,7 @@ public class SecurityUtil {
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader,
                 claims)).getTokenValue();
     }
+
 
     /**
      * Get the login of the current user.

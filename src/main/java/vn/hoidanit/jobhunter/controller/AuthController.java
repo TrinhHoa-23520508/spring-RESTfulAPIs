@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.LoginDTO;
@@ -16,6 +17,8 @@ import vn.hoidanit.jobhunter.domain.dto.ResLoginDTO;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
 import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
+import vn.hoidanit.jobhunter.util.error.IdInvalidException;
+import vn.hoidanit.jobhunter.util.error.NotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -59,7 +62,7 @@ public class AuthController {
         }
 
         //Create token
-        String accessToken = this.securityUtil.createAccessToken(authentication, resLoginDTO.getUserLogin());
+        String accessToken = this.securityUtil.createAccessToken(authentication.getName(), resLoginDTO.getUserLogin());
         resLoginDTO.setAccessToken(accessToken);
 
         //Create refresh token
@@ -85,5 +88,57 @@ public class AuthController {
     public ResponseEntity<ResLoginDTO.UserLogin> getAccount() {
         ResLoginDTO.UserLogin userLogin = this.userService.getUserLogin();
         return ResponseEntity.ok().body(userLogin);
+    }
+
+    //refresh access token by cookie
+    @GetMapping("/auth/refresh")
+    @ApiMessage("Get user by refresh token")
+    public ResponseEntity<ResLoginDTO> getRefreshToken(@CookieValue(name = "refresh_token", defaultValue = "abc") String refreshToken) {
+
+        //check cookie has refresh token
+        if(refreshToken.equals("abc")) {
+            throw new NotFoundException("Bạn không có refresh token ở trong cookie");
+        }
+        //check valid
+        Jwt decodeToken = this.securityUtil.checkValidRefreshToken(refreshToken);
+        String email = decodeToken.getSubject();
+
+        //check user by token + email
+        User user = this.userService.getUserByRefreshTokenAndEmail(refreshToken, email);
+        if(user == null){
+            throw new NotFoundException("Refresh token không hợp lệ ");
+        }
+
+        //create response DTO and create new access_token and refresh_token
+        ResLoginDTO resLoginDTO = new ResLoginDTO();
+
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
+        User currentUserLogin = this.userService.handleGetUserByUserName(email);
+        if(currentUserLogin != null) {
+            userLogin.setId(currentUserLogin.getId());
+            userLogin.setUserName(currentUserLogin.getName());
+            userLogin.setEmail(currentUserLogin.getEmail());
+            resLoginDTO.setUserLogin(userLogin);
+        }
+        //Create token
+        String accessToken = this.securityUtil.createAccessToken(email, resLoginDTO.getUserLogin());
+        resLoginDTO.setAccessToken(accessToken);
+
+        //Create refresh token
+        String newRefreshToken = this.securityUtil.createRefreshToken(email, resLoginDTO);
+
+        //Update user refresh token
+        this.userService.updateRefreshToken(newRefreshToken, email);
+
+        //send cookie
+        ResponseCookie springCookie = ResponseCookie.from("refresh_token", newRefreshToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, springCookie.toString())
+                .body(resLoginDTO);
+
     }
 }
