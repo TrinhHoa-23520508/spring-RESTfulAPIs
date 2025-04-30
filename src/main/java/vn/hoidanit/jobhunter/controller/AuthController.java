@@ -12,15 +12,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import vn.hoidanit.jobhunter.domain.User;
-import vn.hoidanit.jobhunter.domain.dto.LoginDTO;
+import vn.hoidanit.jobhunter.domain.dto.ReqLoginDTO;
 import vn.hoidanit.jobhunter.domain.dto.ResLoginDTO;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
 import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
 import vn.hoidanit.jobhunter.util.error.NotFoundException;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -43,10 +41,10 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     @ApiMessage("Login account")
-    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO reqLoginDTO) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                loginDTO.getUsername(),
-                loginDTO.getPassword()
+                reqLoginDTO.getUsername(),
+                reqLoginDTO.getPassword()
         );
         //xác thực người dùng cần viết hàm loadUserByName()
         Authentication authentication = this.authenticationManagerBuidler.getObject().authenticate(authenticationToken);
@@ -56,7 +54,7 @@ public class AuthController {
         ResLoginDTO resLoginDTO = new ResLoginDTO();
 
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
-        User currentUserLogin = this.userService.handleGetUserByUserName(loginDTO.getUsername());
+        User currentUserLogin = this.userService.handleGetUserByUserName(reqLoginDTO.getUsername());
         if(currentUserLogin != null) {
             userLogin.setId(currentUserLogin.getId());
             userLogin.setUserName(currentUserLogin.getName());
@@ -69,10 +67,10 @@ public class AuthController {
         resLoginDTO.setAccessToken(accessToken);
 
         //Create refresh token
-        String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getUsername(), resLoginDTO);
+        String refreshToken = this.securityUtil.createRefreshToken(reqLoginDTO.getUsername(), resLoginDTO);
 
         //Update user refresh token
-        this.userService.updateRefreshToken(refreshToken, loginDTO.getUsername());
+        this.userService.updateRefreshToken(refreshToken, reqLoginDTO.getUsername());
 
         //send cookie
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", refreshToken)
