@@ -62,7 +62,7 @@ public class UserService {
         Page<User> users = this.userRepository.findAll(spec, pageable);
 
         ResultPaginationDTO<List<UserResponseDto>> paginationDTO = new ResultPaginationDTO<>();
-        Meta meta = new Meta();
+        ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
 
         meta.setPage(pageable.getPageNumber() + 1);
         meta.setTotal((int) users.getTotalElements());
