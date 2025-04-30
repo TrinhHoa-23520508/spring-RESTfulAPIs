@@ -5,8 +5,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import vn.hoidanit.jobhunter.domain.Company;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.response.*;
+import vn.hoidanit.jobhunter.repository.CompanyRepository;
 import vn.hoidanit.jobhunter.service.mapper.UserMapper;
 import vn.hoidanit.jobhunter.repository.UserRepository;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
@@ -22,18 +24,34 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final CompanyRepository companyRepository;
 
 
     public UserService(UserRepository userRepository
             , PasswordEncoder passwordEncoder
-            , UserMapper userMapper) {
+            , UserMapper userMapper
+            , CompanyRepository companyRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.companyRepository = companyRepository;
     }
 
     public UserCreateDto handleCreateUser(User user) {
 
+        UserCreateDto userCreateDto = new UserCreateDto();
+        if(user.getCompany() != null){
+            long id =user.getCompany().getId();
+            Optional<Company> companyDB = this.companyRepository.findById(id);
+
+            if(companyDB.isPresent()){
+                user.setCompany(companyDB.get());
+            }
+            else{
+                throw new NotFoundException("Company not found");
+            }
+
+        }
         if (this.userRepository.existsByEmail(user.getEmail())) {
             throw new DuplicateResourceException("Email "+user.getEmail()+" đã tồn tại!");
         }
@@ -41,6 +59,7 @@ public class UserService {
         user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 
         User savedUser = this.userRepository.save(user);
+
         return this.userMapper.toUserCreateDto(savedUser);
     }
 
@@ -88,6 +107,15 @@ public class UserService {
             currentUser.setGender(reqUser.getGender());
             currentUser.setAge(reqUser.getAge());
             currentUser.setAddress(reqUser.getAddress());
+            if(reqUser.getCompany() != null){
+                Optional<Company> companyOptional = this.companyRepository.findById(reqUser.getCompany().getId());
+                if(companyOptional.isPresent()){
+                    currentUser.setCompany(companyOptional.get());
+                }
+                else{
+                    currentUser.setCompany(null);
+                }
+            }
             // update
             currentUser = this.userRepository.save(currentUser);
         }

@@ -1,5 +1,10 @@
 package vn.hoidanit.jobhunter.domain.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import vn.hoidanit.jobhunter.domain.Company;
 import vn.hoidanit.jobhunter.util.constant.GenderEnum;
 
 import java.time.Instant;
@@ -12,10 +17,29 @@ public class UserCreateDto {
     private String address;
     private int age;
     private Instant createdAt;
+    private Company company;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Company {
+        private long id;
+        private String name;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
 
     public Long getId() {
         return id;
     }
+
 
     public void setId(Long id) {
         this.id = id;
