@@ -105,4 +105,12 @@ public class UserService {
         return this.userMapper.toUserResponseDto(user);
     }
 
+    public void updateRefreshToken(String refreshToken, String email) {
+        User currentUser = this.handleGetUserByUserName(email);
+        if(currentUser != null){
+            currentUser.setRefreshToken(refreshToken);
+            this.userRepository.save(currentUser);
+        }
+    }
+
 }
