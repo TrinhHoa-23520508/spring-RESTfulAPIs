@@ -116,7 +116,7 @@ public class UserService {
         }
     }
 
-    public ResLoginDTO.UserLogin getUserLogin() {
+    public ResLoginDTO.UserGetAccount getUserLogin() {
         String email = SecurityUtil.getCurrentUserLogin()
                                     .isPresent()?
                         SecurityUtil.getCurrentUserLogin().get()
@@ -128,12 +128,19 @@ public class UserService {
         userLogin.setUserName(user.getName());
         userLogin.setId(user.getId());
 
-        return userLogin;
+        return new ResLoginDTO.UserGetAccount(userLogin);
     }
 
     public User getUserByRefreshTokenAndEmail(String refreshToken, String email) {
         User user = this.userRepository.findByRefreshTokenAndEmail(refreshToken, email);
         return user;
+    }
+
+    public void handleLogout(String email){
+        User user = this.userRepository.findByEmail(email);
+        user.setRefreshToken(null);
+        return;
+
     }
 
 }

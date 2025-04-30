@@ -20,6 +20,8 @@ import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
 import vn.hoidanit.jobhunter.util.error.NotFoundException;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/v1")
 public class AuthController {
@@ -40,6 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
+    @ApiMessage("Login account")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 loginDTO.getUsername(),
@@ -58,11 +61,11 @@ public class AuthController {
             userLogin.setId(currentUserLogin.getId());
             userLogin.setUserName(currentUserLogin.getName());
             userLogin.setEmail(currentUserLogin.getEmail());
-            resLoginDTO.setUserLogin(userLogin);
+            resLoginDTO.setUser(userLogin);
         }
 
         //Create token
-        String accessToken = this.securityUtil.createAccessToken(authentication.getName(), resLoginDTO.getUserLogin());
+        String accessToken = this.securityUtil.createAccessToken(authentication.getName(), resLoginDTO.getUser());
         resLoginDTO.setAccessToken(accessToken);
 
         //Create refresh token
@@ -85,8 +88,8 @@ public class AuthController {
     //get account
     @GetMapping("/auth/account")
     @ApiMessage("Fetch account")
-    public ResponseEntity<ResLoginDTO.UserLogin> getAccount() {
-        ResLoginDTO.UserLogin userLogin = this.userService.getUserLogin();
+    public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount() {
+        ResLoginDTO.UserGetAccount userLogin = this.userService.getUserLogin();
         return ResponseEntity.ok().body(userLogin);
     }
 
@@ -118,10 +121,10 @@ public class AuthController {
             userLogin.setId(currentUserLogin.getId());
             userLogin.setUserName(currentUserLogin.getName());
             userLogin.setEmail(currentUserLogin.getEmail());
-            resLoginDTO.setUserLogin(userLogin);
+            resLoginDTO.setUser(userLogin);
         }
         //Create token
-        String accessToken = this.securityUtil.createAccessToken(email, resLoginDTO.getUserLogin());
+        String accessToken = this.securityUtil.createAccessToken(email, resLoginDTO.getUser());
         resLoginDTO.setAccessToken(accessToken);
 
         //Create refresh token
@@ -140,5 +143,24 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, springCookie.toString())
                 .body(resLoginDTO);
 
+    }
+
+    @PostMapping("/auth/logout")
+    @ApiMessage("Logout account")
+    public ResponseEntity<Void> logout() throws IdInvalidException{
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+
+        if(email.equals(""))
+        {
+            throw new IdInvalidException("Token truyền lên không hợp lệ");
+        }
+        this.userService.handleLogout(email);
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", null)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(null);
     }
 }
