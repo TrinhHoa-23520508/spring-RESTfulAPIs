@@ -9,6 +9,7 @@ import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.*;
 import vn.hoidanit.jobhunter.service.mapper.UserMapper;
 import vn.hoidanit.jobhunter.repository.UserRepository;
+import vn.hoidanit.jobhunter.util.SecurityUtil;
 import vn.hoidanit.jobhunter.util.error.DuplicateResourceException;
 import vn.hoidanit.jobhunter.util.error.NotFoundException;
 
@@ -23,7 +24,9 @@ public class UserService {
     private final UserMapper userMapper;
 
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
+    public UserService(UserRepository userRepository
+            , PasswordEncoder passwordEncoder
+            , UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
@@ -111,6 +114,21 @@ public class UserService {
             currentUser.setRefreshToken(refreshToken);
             this.userRepository.save(currentUser);
         }
+    }
+
+    public ResLoginDTO.UserLogin getUserLogin() {
+        String email = SecurityUtil.getCurrentUserLogin()
+                                    .isPresent()?
+                        SecurityUtil.getCurrentUserLogin().get()
+                                    :"";
+
+        User user = this.handleGetUserByUserName(email);
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
+        userLogin.setEmail(email);
+        userLogin.setUserName(user.getName());
+        userLogin.setId(user.getId());
+
+        return userLogin;
     }
 
 }

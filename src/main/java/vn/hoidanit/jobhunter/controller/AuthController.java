@@ -9,15 +9,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.LoginDTO;
 import vn.hoidanit.jobhunter.domain.dto.ResLoginDTO;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
+import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -37,7 +35,8 @@ public class AuthController {
         this.securityUtil = securityUtil;
         this.userService = userService;
     }
-    @PostMapping("/login")
+
+    @PostMapping("/auth/login")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 loginDTO.getUsername(),
@@ -46,8 +45,6 @@ public class AuthController {
         //xác thực người dùng cần viết hàm loadUserByName()
         Authentication authentication = this.authenticationManagerBuidler.getObject().authenticate(authenticationToken);
 
-        //Create token
-        String accessToken = this.securityUtil.createAccessToken(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         ResLoginDTO resLoginDTO = new ResLoginDTO();
 
@@ -59,6 +56,9 @@ public class AuthController {
             userLogin.setEmail(currentUserLogin.getEmail());
             resLoginDTO.setUserLogin(userLogin);
         }
+
+        //Create token
+        String accessToken = this.securityUtil.createAccessToken(authentication, resLoginDTO.getUserLogin());
         resLoginDTO.setAccessToken(accessToken);
 
         //Create refresh token
@@ -76,5 +76,13 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, springCookie.toString())
                 .body(resLoginDTO);
+    }
+
+    //get account
+    @GetMapping("/auth/account")
+    @ApiMessage("Fetch account")
+    public ResponseEntity<ResLoginDTO.UserLogin> getAccount() {
+        ResLoginDTO.UserLogin userLogin = this.userService.getUserLogin();
+        return ResponseEntity.ok().body(userLogin);
     }
 }
