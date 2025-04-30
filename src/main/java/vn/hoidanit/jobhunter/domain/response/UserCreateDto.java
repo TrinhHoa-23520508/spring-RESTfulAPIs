@@ -1,16 +1,17 @@
-package vn.hoidanit.jobhunter.domain.dto;
+package vn.hoidanit.jobhunter.domain.response;
 
 import vn.hoidanit.jobhunter.util.constant.GenderEnum;
 
 import java.time.Instant;
 
-public class UserUpdateDto {
+public class UserCreateDto {
     private Long id;
     private String name;
+    private String email;
     private GenderEnum gender;
     private String address;
     private int age;
-    private Instant updateAt;
+    private Instant createdAt;
 
     public Long getId() {
         return id;
@@ -26,6 +27,14 @@ public class UserUpdateDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public GenderEnum getGender() {
@@ -52,11 +61,11 @@ public class UserUpdateDto {
         this.age = age;
     }
 
-    public Instant getUpdateAt() {
-        return updateAt;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUpdateAt(Instant updateAt) {
-        this.updateAt = updateAt;
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 }
