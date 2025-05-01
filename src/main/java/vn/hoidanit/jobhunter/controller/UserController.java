@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.response.ResultPaginationDTO;
-import vn.hoidanit.jobhunter.domain.response.UserCreateDto;
-import vn.hoidanit.jobhunter.domain.response.UserResponseDto;
-import vn.hoidanit.jobhunter.domain.response.UserUpdateDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserCreateDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserResponseDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserUpdateDto;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;

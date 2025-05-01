@@ -1,4 +1,4 @@
-package vn.hoidanit.jobhunter.domain.response;
+package vn.hoidanit.jobhunter.domain.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

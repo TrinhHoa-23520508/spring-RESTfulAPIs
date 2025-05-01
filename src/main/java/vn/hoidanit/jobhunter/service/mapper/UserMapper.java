@@ -2,9 +2,9 @@ package vn.hoidanit.jobhunter.service.mapper;
 
 import org.springframework.stereotype.Component;
 import vn.hoidanit.jobhunter.domain.User;
-import vn.hoidanit.jobhunter.domain.response.UserCreateDto;
-import vn.hoidanit.jobhunter.domain.response.UserResponseDto;
-import vn.hoidanit.jobhunter.domain.response.UserUpdateDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserCreateDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserResponseDto;
+import vn.hoidanit.jobhunter.domain.response.user.UserUpdateDto;
 
 @Component
 public class UserMapper {
