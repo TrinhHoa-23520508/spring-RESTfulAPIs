@@ -1,12 +1,12 @@
 package vn.hoidanit.jobhunter.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -49,5 +49,23 @@ public class FileService {
         }
 
         return finalName;
+    }
+
+    public long getFileLength(String fileName, String folder) throws URISyntaxException {
+        URI uri = new URI(baseURI + folder + "/"+ fileName);
+        Path path = Paths.get(uri);
+        File tmpDir = new File(path.toString());
+        if (tmpDir.isDirectory() || !tmpDir.exists()) {
+            return 0;
+        }
+        return tmpDir.length();
+    }
+
+    public InputStreamResource getResource(String fileName, String folder) throws URISyntaxException, FileNotFoundException {
+            URI uri = new URI(baseURI +folder +"/"+ fileName);
+            Path path = Paths.get(uri);
+
+            File file = new File(path.toString());
+            return new InputStreamResource(new FileInputStream(file));
     }
 }
