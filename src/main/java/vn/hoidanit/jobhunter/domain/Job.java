@@ -59,6 +59,10 @@ public class Job {
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
     private List<Skill> skills;
 
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Resume> resumes;
+
 
     @PrePersist
     public void preCreateJob(){
