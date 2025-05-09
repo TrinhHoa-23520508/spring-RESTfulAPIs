@@ -123,4 +123,8 @@ public class JobService {
 
         return result;
     }
+
+    public boolean checkExistJobById(long id) {
+        return jobRepository.existsById(id);
+    }
 }
