@@ -1,7 +1,9 @@
 package vn.hoidanit.jobhunter.util.error;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
@@ -25,7 +27,8 @@ public class GlobalException {
             BadCredentialsException.class,
             NotFoundException.class,
             DuplicateResourceException.class,
-            IdInvalidException.class
+            IdInvalidException.class,
+            BadRequestException.class,
     })
     public ResponseEntity<RestResponse<Object>> handleIdException(Exception ex) {
         RestResponse<Object> res = new RestResponse<Object>();

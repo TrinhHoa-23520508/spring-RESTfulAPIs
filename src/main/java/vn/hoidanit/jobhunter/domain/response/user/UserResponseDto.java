@@ -21,6 +21,7 @@ public class UserResponseDto {
     private Instant createdAt;
     private Instant updatedAt;
     private UserCreateDto.Company company;
+    private UserCreateDto.Role role;
 
 
 }

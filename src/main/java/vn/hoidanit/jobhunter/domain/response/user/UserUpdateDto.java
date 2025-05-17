@@ -20,6 +20,7 @@ public class UserUpdateDto {
     private int age;
     private Instant updateAt;
     private UserCreateDto.Company company;
+    private UserCreateDto.Role role;
 
 
 }

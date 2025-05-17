@@ -1,5 +1,11 @@
 package vn.hoidanit.jobhunter.service;
 
+import com.turkraft.springfilter.builder.FilterBuilder;
+import com.turkraft.springfilter.converter.FilterSpecification;
+import com.turkraft.springfilter.converter.FilterSpecificationConverter;
+import com.turkraft.springfilter.parser.FilterParser;
+import com.turkraft.springfilter.parser.node.FilterNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,6 +18,7 @@ import vn.hoidanit.jobhunter.domain.response.resume.ResumeUpdateDto;
 import vn.hoidanit.jobhunter.domain.response.user.UserResponseDto;
 import vn.hoidanit.jobhunter.repository.ResumeRepository;
 import vn.hoidanit.jobhunter.service.mapper.ResumeMapper;
+import vn.hoidanit.jobhunter.util.SecurityUtil;
 import vn.hoidanit.jobhunter.util.error.IdInvalidException;
 
 import java.util.List;
@@ -19,6 +26,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class ResumeService {
+
+    @Autowired
+    FilterBuilder filterBuilder;
+
+    @Autowired
+    FilterSpecificationConverter filterSpecificationConverter;
+
+    @Autowired
+    FilterParser filterParser;
 
     private final ResumeRepository resumeRepository;
     private final JobService jobService;
@@ -104,5 +120,35 @@ public class ResumeService {
                         );
         return paginationDTO;
 
+    }
+
+    public ResultPaginationDTO fetchResumeByUser(Pageable pageable) {
+        // query builder
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() == true
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
+        FilterNode node = filterParser.parse("email='" + email + "'");
+        FilterSpecification<Resume> spec = filterSpecificationConverter.convert(node);
+        Page<Resume> pageResume = this.resumeRepository.findAll(spec, pageable);
+
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber() + 1);
+        mt.setPageSize(pageable.getPageSize());
+
+        mt.setPages(pageResume.getTotalPages());
+        mt.setTotal(pageResume.getTotalElements());
+
+        rs.setMeta(mt);
+
+        // remove sensitive data
+        List<ResumeResponseDto> listResume = pageResume.getContent()
+                .stream().map(item -> this.resumeMapper.toResumeResponseDto(item))
+                .collect(Collectors.toList());
+
+        rs.setResult(listResume);
+
+        return rs;
     }
 }

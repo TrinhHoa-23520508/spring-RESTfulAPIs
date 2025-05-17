@@ -23,6 +23,13 @@ public class UserMapper {
         else{
             userCreateDto.setCompany(null);
         }
+        if(user.getRole() != null) {
+            userCreateDto.setRole(new UserCreateDto.Role(user.getRole().getId(), user.getRole().getName()));
+        }
+        else{
+            userCreateDto.setRole(null);
+        }
+
 
         return userCreateDto;
     }
@@ -39,6 +46,12 @@ public class UserMapper {
         }
         else{
             userUpdateDto.setCompany(null);
+        }
+        if(user.getRole() != null) {
+            userUpdateDto.setRole(new UserCreateDto.Role(user.getRole().getId(), user.getRole().getName()));
+        }
+        else{
+            userUpdateDto.setRole(null);
         }
         return userUpdateDto;
     }
@@ -57,6 +70,12 @@ public class UserMapper {
         }
         else{
             userResponseDto.setCompany(null);
+        }
+        if(user.getRole() != null) {
+            userResponseDto.setRole(new UserCreateDto.Role(user.getRole().getId(), user.getRole().getName()));
+        }
+        else{
+            userResponseDto.setRole(null);
         }
         return userResponseDto;
     }

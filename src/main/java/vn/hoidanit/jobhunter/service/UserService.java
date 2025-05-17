@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.hoidanit.jobhunter.domain.Company;
+import vn.hoidanit.jobhunter.domain.Role;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.response.*;
 import vn.hoidanit.jobhunter.domain.response.user.UserCreateDto;
@@ -28,16 +29,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final CompanyRepository companyRepository;
+    private final RoleService roleService;
 
 
     public UserService(UserRepository userRepository
             , PasswordEncoder passwordEncoder
             , UserMapper userMapper
-            , CompanyRepository companyRepository) {
+            , CompanyRepository companyRepository
+    , RoleService roleService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.companyRepository = companyRepository;
+        this.roleService = roleService;
     }
 
     public UserCreateDto handleCreateUser(User user) {
@@ -58,6 +62,9 @@ public class UserService {
         if (this.userRepository.existsByEmail(user.getEmail())) {
             throw new DuplicateResourceException("Email "+user.getEmail()+" đã tồn tại!");
         }
+
+       Optional<Role> roleOptional = this.roleService.getRoleById(user.getRole().getId());
+        user.setRole(roleOptional.isPresent()?roleOptional.get():null);
 
         user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 
@@ -119,6 +126,15 @@ public class UserService {
                     currentUser.setCompany(null);
                 }
             }
+            if(reqUser.getRole() != null){
+                Optional<Role> roleOptional = this.roleService.getRoleById(reqUser.getRole().getId());
+                if(roleOptional.isPresent()){
+                    currentUser.setRole(roleOptional.get());
+                }
+                else{
+                    currentUser.setRole(null);
+                }
+            }
             // update
             currentUser = this.userRepository.save(currentUser);
         }
@@ -158,6 +174,7 @@ public class UserService {
         userLogin.setEmail(email);
         userLogin.setUserName(user.getName());
         userLogin.setId(user.getId());
+        userLogin.setRole(user.getRole());
 
         return new ResLoginDTO.UserGetAccount(userLogin);
     }
