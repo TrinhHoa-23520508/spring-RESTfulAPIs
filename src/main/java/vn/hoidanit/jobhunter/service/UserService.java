@@ -170,6 +170,9 @@ public class UserService {
                                     :"";
 
         User user = this.handleGetUserByUserName(email);
+        if(user == null){
+            throw new NotFoundException("User not found with email: " + email + " !");
+        }
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
         userLogin.setEmail(email);
         userLogin.setUserName(user.getName());
@@ -187,7 +190,6 @@ public class UserService {
     public void handleLogout(String email){
         User user = this.userRepository.findByEmail(email);
         user.setRefreshToken(null);
-        return;
 
     }
 

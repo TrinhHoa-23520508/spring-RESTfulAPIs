@@ -3,6 +3,7 @@ package vn.hoidanit.jobhunter.controller;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +16,7 @@ import vn.hoidanit.jobhunter.domain.Role;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.request.ReqLoginDTO;
 import vn.hoidanit.jobhunter.domain.response.ResLoginDTO;
+import vn.hoidanit.jobhunter.domain.response.user.UserCreateDto;
 import vn.hoidanit.jobhunter.service.UserService;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
 import vn.hoidanit.jobhunter.util.annotation.ApiMessage;
@@ -25,17 +27,17 @@ import vn.hoidanit.jobhunter.util.error.NotFoundException;
 @RequestMapping("/api/v1")
 public class AuthController {
     private final SecurityUtil securityUtil;
-    private final AuthenticationManagerBuilder authenticationManagerBuidler;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final UserService userService;
 
 
     @Value("${hoidanit.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
-    public AuthController(AuthenticationManagerBuilder authenticationManagerBuidler
+    public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder
             , SecurityUtil securityUtil
             , UserService userService) {
-        this.authenticationManagerBuidler = authenticationManagerBuidler;
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.securityUtil = securityUtil;
         this.userService = userService;
     }
@@ -47,7 +49,7 @@ public class AuthController {
                 loginDto.getUsername(), loginDto.getPassword());
 
         // xác thực người dùng => cần viết hàm loadUserByUsername
-        Authentication authentication = this.authenticationManagerBuidler.getObject()
+        Authentication authentication = this.authenticationManagerBuilder.getObject()
                 .authenticate(authenticationToken);
 
         // set thông tin người dùng đăng nhập vào context (có thể sử dụng sau này)
@@ -58,8 +60,8 @@ public class AuthController {
         if (currentUserDB != null) {
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
-                    currentUserDB.getEmail(),
                     currentUserDB.getName(),
+                    currentUserDB.getEmail(),
                     currentUserDB.getRole());
             res.setUser(userLogin);
         }
@@ -167,5 +169,11 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(null);
+    }
+
+    @PostMapping("/auth/register")
+    @ApiMessage("Register account")
+    public ResponseEntity<UserCreateDto> register( @Valid @RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.handleCreateUser(user));
     }
 }
